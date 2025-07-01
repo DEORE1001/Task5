@@ -2,82 +2,109 @@
 **File Analyzed:** taskk5.txt  
 **Analyst:** Rohit  
 **Date:** July 1, 2025  
-**Tool Used:** Wireshark (exported packet hex view)
+**Tool Used:** Wireshark 
 
 ---
 
-## 🧾 Summary
-The packet data from `taskk5.txt` represents real-time communication involving a local machine (`192.168.1.5`) and external IPs. The traffic includes encrypted TLS handshakes, HTTP-related TCP traffic, DNS queries, and multiple ARP lookups. There is also clear evidence of multicast service discovery protocols such as mDNS and SSDP.
+1. Overview
+File analyzed: task5.pcapa
 
----
+Capture duration: 07:01:48,040,068 to 07:01:49,555,721 (~1.5 seconds)
 
-## 📊 Protocols Identified
+Total packets: 20 distinct entries
 
-| Protocol | Description |
-|----------|-------------|
-| **TCP**  | Used for HTTP, HTTPS (Port 80, 443). Observed SYN/ACK handshakes and ACK flags. |
-| **TLS**  | Encrypted communication, visible as raw data starting with `17 03 03`, indicating TLS 1.2 or 1.3 packets. |
-| **UDP**  | Present in DNS, mDNS, and SSDP traffic. |
-| **SSDP** | Service discovery over `239.255.255.250:1900`, typically UPnP devices. |
-| **mDNS** | Local hostname resolution (`224.0.0.251:5353`), part of Apple/Bonjour or IoT traffic. |
-| **ARP**  | Resolving local IPs to MAC addresses. Broadcast MACs (`ff:ff:ff:ff:ff:ff`) indicate ARP requests. |
+Key protocols: TCP, UDP, TLS, DNS, ARP, ICMPv6, HTTP(S)
 
----
+2. Key Observations
+A. Protocol Distribution
+TCP: Majority of traffic (HTTPS, TLS-encrypted data)
 
-## 📍 Traffic Details
+UDP: DNS queries/responses and ICMPv6
 
-### 🔐 TLS Encrypted Traffic
-- **Time:** `07:01:48.040`
-- **Destination Port:** 443 (HTTPS)
-- **Signature:** Packets starting with `17 03 03` — TLS application data
-- **Interpretation:** Client is engaged in encrypted browsing session, likely to a site like Google or Firefox captive portal.
+ARP: 2 requests for local IP resolution (192.168.1.11, 192.168.1.237)
 
-### 🌍 SSDP (UDP Port 1900)
-- **Time:** `07:01:48.284`
-- **Multicast IP:** `239.255.255.250`
-- **Usage:** Device/service discovery (e.g., printers, smart TVs)
+TLS/SSL: Encrypted application data (e.g., port 443)
 
-### 📡 mDNS (UDP Port 5353)
-- **Time:** `07:01:48.736`
-- **Multicast IP:** `224.0.0.251`
-- **Usage:** Resolving local device names on LAN without a DNS server
+DNS: Queries for www.youtube.com
 
-### 🔁 ARP Requests
-- **MAC:** `ff:ff:ff:ff:ff:ff` (Broadcast)
-- **Usage:** Device attempting to discover hardware address of another host
-- **Time:** Around `07:01:48.582`
+ICMPv6: IPv6 neighbor discovery packets
 
----
+B. IP Addresses
+Local Device: 192.168.1.5 (initiates most traffic)
 
-## 📌 Notable Packet Patterns
+External Servers:
 
-- Encrypted TLS application data was present in majority of traffic after TCP handshakes.
-- Ports 443 and 80 were used (HTTPS and HTTP).
-- SSDP traffic used `M-SEARCH` requests — common in Windows/IoT environments.
-- No ICMP (ping) or malicious signatures were found.
-- The system also attempted mDNS name resolution using multicast.
+34.237.73.95 (Amazon AWS)
 
----
+96.171.22.12 (likely a CDN/server)
 
-## 🧠 Observations
+8.8.8.8 (Google DNS)
 
-- This capture clearly reflects **early network initialization** traffic:
-  - ARP for discovering gateway MAC
-  - SSDP/mDNS scanning
-  - TLS negotiation with public IPs
-- No signs of suspicious or malformed packets.
-- Packet lengths vary between 54–1514 bytes — consistent with MTU and segmentation of TLS streams.
+142.250.70.78 (YouTube server)
 
----
+IPv6 Addresses: 2001:db8:: prefixes (test addresses) in ICMPv6 packets
 
-## ✅ Conclusion
+C. Port Activity
+HTTPS/TLS:
 
-This was a clean capture of real-world encrypted and local discovery traffic.
+Port 443 (e.g., YouTube, Amazon)
 
-- TLS confirms active secure web traffic
-- SSDP/mDNS indicate LAN-level service awareness
-- ARP verifies local IP-to-MAC resolution
-- The system shows healthy, baseline startup behavior
+Port 01BB (hex) = 443
 
----
+DNS: Port 53 (UDP)
+
+Ephemeral Ports: High-numbered ports (51383, 54163) for outbound connections
+
+3. Traffic Highlights
+A. DNS Activity
+Query: www.youtube.com sent to 8.8.8.8 (Google DNS) at 07:01:49,345,161.
+
+Response: Multiple A records returned for YouTube (e.g., 142.250.70.78).
+
+B. HTTPS/TLS Traffic
+YouTube Access:
+
+TLS handshake with 142.250.70.78 (port 443) post-DNS resolution.
+
+Large encrypted data transfers (packets ~1.5 KB–4 KB).
+
+Amazon Server:
+
+Early TLS session with 34.237.73.95 (port 443).
+
+C. ARP Requests
+2 broadcast requests:
+
+For 192.168.1.11 (at 07:01:48,582,930).
+
+For 192.168.1.237 (at 07:01:48,779,864).
+
+No responses captured, suggesting these hosts were offline or unreachable.
+
+D. ICMPv6 Packets
+Neighbor discovery messages for IPv6 address resolution (e.g., fe80::f4c8:59f0:d4:627c).
+
+4. Security Notes
+Encryption: All HTTP traffic uses TLS (no plaintext exposed).
+
+No Threats Detected: No malware signatures or suspicious ports (e.g., 6667/IRC).
+
+ARP Spoofing?: Unanswered ARP requests may indicate network scans but are inconclusive alone.
+
+5. Summary
+Primary Activity: Web browsing (YouTube, Amazon services).
+
+Network Behavior:
+
+Heavy use of encrypted HTTPS.
+
+Reliance on Google DNS (8.8.8.8).
+
+Local network scans via ARP.
+
+Recommendations:
+
+Monitor unanswered ARP requests for potential network issues.
+
+Verify TLS certificates for youtube.com/amazon.com to rule out MITM attacks.
 
